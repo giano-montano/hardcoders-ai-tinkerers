@@ -1,0 +1,12 @@
+{
+  "name": "medisaving-telegram",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env src/bot.js",
+    "test": "node --test",
+    "check": "node --check src/bot.js && node --check src/codex.js"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": { "@playwright/mcp": "0.0.80" }
+}

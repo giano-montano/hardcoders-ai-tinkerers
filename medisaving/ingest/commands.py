@@ -7,7 +7,37 @@ import unicodedata
 
 from ..core import validate_dataset
 from .client import Client
-from .normalize import PROFILE, offer, strength
+from .normalize import PROFILE, offer, strength, text as canonical_text
+
+
+def view(args, store):
+    if not 1 <= args.limit <= 5 or args.offset < 0:
+        raise ValueError("Read limit must be 1–5; offset must be nonnegative")
+    product = parse_product(args.product)
+    dataset = store.get(args.dataset_id, "offers")
+    form = canonical_text(args.form) if args.form else None
+    fields = ("offer_id", "medicine", "strength", "form", "identity_status", "medicine_key",
+              "pharmacy", "district", "address", "laboratory", "unit_price_cents",
+              "pack_price_cents", "pack_units", "phone", "reported_at", "presentation")
+    selected = []
+    index = 0
+    more = False
+    for row in dataset["offers"]:
+        if (row.get("source_group"), row.get("source_form_group"), row.get("strength")) != (
+            product["group"], product["ff"], product["strength"]):
+            continue
+        if form and canonical_text(row["form"]) != form:
+            continue
+        if index >= args.offset:
+            if len(selected) == args.limit:
+                more = True
+                break
+            selected.append({key: row.get(key) for key in fields})
+        index += 1
+    source = dataset["source"]
+    return {"offers": selected, "next": args.offset + len(selected) if more else None,
+            "order": "source", "complete": source["complete"],
+            "fetched_at": source["fetched_at"], "warnings": source.get("warnings", ["diagnostics_unavailable"])}
 
 # Search fallbacks observed in the completed official-portal session.
 # These are query hints, not clinical substitution rules.

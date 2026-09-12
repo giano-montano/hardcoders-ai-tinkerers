@@ -10,7 +10,14 @@ def register(areas):
     command = commands.add_parser("import", help="Import a normalized offers JSON file")
     command.add_argument("path")
     command.set_defaults(run=import_offers)
-    from .commands import resolve, fetch, detail, district
+    from .commands import resolve, fetch, detail, district, view
+    command = commands.add_parser("v", help="Read a bounded page of offers in source order; no ranking")
+    command.add_argument("dataset_id")
+    command.add_argument("product", help="Exact product ID returned by resolve")
+    command.add_argument("--form", help="Exact source form, normalized as text-v1")
+    command.add_argument("--offset", type=int, default=0)
+    command.add_argument("--limit", type=int, default=3)
+    command.set_defaults(run=view)
     command = commands.add_parser("u", help="Resolve district ubigeo (Lima province by default)")
     command.add_argument("query")
     command.add_argument("--province", default="1501")

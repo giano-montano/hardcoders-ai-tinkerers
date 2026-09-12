@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text", "attachments"],
+  "properties": {
+    "text": { "type": "string" },
+    "attachments": { "type": "array", "items": { "type": "string" } }
+  }
+}

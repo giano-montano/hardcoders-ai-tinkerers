@@ -12,6 +12,7 @@ I r escitalopram 20mg
 I r aripiprazol 5mg
 I r clonazepam 0.25mg --sl
 I f 150116 1515:3:20mg 449:3:5mg 1058:3:0.25mg
+I v DATASET_ID 1058:3:0.25mg --form "tableta sublingual" --limit 1
 I d DATASET_ID OFFER_ID
 ```
 
@@ -22,7 +23,11 @@ nombre del candidato; la forma real queda en cada oferta y debe verificarse.
 
 `f` consulta un distrito y hasta diez IDs en una llamada de CLI. Devuelve dataset_id,
 n y complete, sin filas. Pasar el ID al módulo consumidor; no abrir el JSON completo
-ni enumerar ofertas en el contexto. `d` obtiene el detalle de una oferta identificada
+ni enumerar ofertas en el contexto. `v` lee 1–5 filas en orden de fuente, por ID de
+producto y forma exacta opcional; `next` permite continuar con --offset. No ordena
+por precio ni identifica mínimos: presentar opciones, no afirmar que son las más
+baratas. Mientras analytics no esté integrado, usar esta lectura acotada para dar
+opciones sin recorrer todo el dataset. `d` obtiene el detalle de una oferta identificada
 por el consumidor. Conserva precios de unidad y caja independientes, sin dividirlos.
 
 Caché automática: precios/detalles 15 min, candidatos/distritos 24 h. `--fresh`
@@ -44,3 +49,7 @@ Con identity_status=source_group_only no confirmar coincidencia de sustancia.
 No unir sales, sinónimos ni unidades distintas por intuición. Datos antiguos sin
 perfil necesitan reimportación explícita antes de mezclarse con los nuevos; el CLI
 no migra artefactos guardados automáticamente.
+
+En el bot desplegado, `med` equivale a `python -m medisaving --data-dir
+/work/ingest ingest`: usar `med u`, `med r`, `med f`, `med v`, `med d`. El código está
+montado de solo lectura en /opt/medisaving; los datos están aislados por chat.

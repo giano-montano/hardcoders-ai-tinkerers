@@ -1,0 +1,17 @@
+[Unit]
+Description=Medisaving Telegram + Codex
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/f3mt0/medicinas-telegram
+ExecStart=/usr/bin/node --env-file=.env src/bot.js
+Restart=always
+RestartSec=5
+UMask=0077
+KillMode=control-group
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fixed read-only package path and per-chat storage inside the existing sandbox.
+export PYTHONPATH=/opt/medisaving
+exec /usr/bin/python3 -m medisaving --data-dir /work/ingest ingest "$@"
