@@ -108,7 +108,6 @@ async function processJob(job) {
       } else if (!message.text && !message.caption && !message.photo && !message.location && !message.document?.mime_type?.startsWith('image/')) {
         job.response = { text: 'Por ahora puedo leer texto y fotos. Envíame los medicamentos y tu distrito.', attachments: [] };
       } else {
-        if (!job.acknowledged) { await sendText(job.chatId, 'Estoy revisando tu consulta. Si requiere buscar precios, puede tardar unos minutos.'); job.acknowledged = true; save(); }
         await telegram('sendChatAction', { chat_id: job.chatId, action: 'typing' });
         typing = setInterval(() => telegram('sendChatAction', { chat_id: job.chatId, action: 'typing' }).catch(() => {}), 4500);
         const images = await download(message, job.chatId);
