@@ -1,0 +1,171 @@
+{
+  "historical_turn_usage": {
+    "input_tokens": 2940806,
+    "cached_input_tokens": 2864512,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 5804,
+    "reasoning_output_tokens": 1497,
+    "total_tokens": 2946610
+  },
+  "historical_tool_outputs": {
+    "count": 40,
+    "bytes": 225353,
+    "o200k_tokens": 71126
+  },
+  "tokenizer": "o200k_base (comparison proxy, not claimed model tokenizer)",
+  "model_calls_new": 0,
+  "cold": {
+    "ms": 4965.49,
+    "bytes": 2281,
+    "o200k_tokens": 870,
+    "commands": 8,
+    "fetch": {
+      "n": 190,
+      "complete": true,
+      "warnings": [
+        "verify_offer_forms"
+      ],
+      "stats": {
+        "requests": 3,
+        "cache_hits": 0,
+        "ms": 1164,
+        "rejected": 0,
+        "duplicates": 0
+      }
+    },
+    "steps": [
+      {
+        "command": "u lince",
+        "ms": 304.38,
+        "bytes": 80,
+        "o200k_tokens": 28
+      },
+      {
+        "command": "r escitalopram 20mg",
+        "ms": 497.19,
+        "bytes": 114,
+        "o200k_tokens": 42
+      },
+      {
+        "command": "r aripiprazol 5mg",
+        "ms": 874.84,
+        "bytes": 106,
+        "o200k_tokens": 40
+      },
+      {
+        "command": "r clonazepam 0.25mg --sl",
+        "ms": 881.29,
+        "bytes": 162,
+        "o200k_tokens": 55
+      },
+      {
+        "command": "f 150116 1515:3:20mg 449:3:5mg 1058:3:0.25mg --stats",
+        "ms": 1235.15,
+        "bytes": 293,
+        "o200k_tokens": 120
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 305.64,
+        "bytes": 544,
+        "o200k_tokens": 210
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 425.53,
+        "bytes": 465,
+        "o200k_tokens": 175
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 441.47,
+        "bytes": 517,
+        "o200k_tokens": 200
+      }
+    ],
+    "fetch_default": {
+      "bytes": 158,
+      "o200k_tokens": 59
+    }
+  },
+  "warm": {
+    "ms": 336.37,
+    "bytes": 2278,
+    "o200k_tokens": 878,
+    "commands": 8,
+    "fetch": {
+      "n": 190,
+      "complete": true,
+      "warnings": [
+        "verify_offer_forms"
+      ],
+      "stats": {
+        "requests": 0,
+        "cache_hits": 3,
+        "ms": 5,
+        "rejected": 0,
+        "duplicates": 0
+      }
+    },
+    "steps": [
+      {
+        "command": "u lince",
+        "ms": 59.59,
+        "bytes": 80,
+        "o200k_tokens": 28
+      },
+      {
+        "command": "r escitalopram 20mg",
+        "ms": 39.62,
+        "bytes": 114,
+        "o200k_tokens": 42
+      },
+      {
+        "command": "r aripiprazol 5mg",
+        "ms": 36.89,
+        "bytes": 106,
+        "o200k_tokens": 40
+      },
+      {
+        "command": "r clonazepam 0.25mg --sl",
+        "ms": 39.92,
+        "bytes": 162,
+        "o200k_tokens": 55
+      },
+      {
+        "command": "f 150116 1515:3:20mg 449:3:5mg 1058:3:0.25mg --stats",
+        "ms": 44.25,
+        "bytes": 290,
+        "o200k_tokens": 116
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 39.55,
+        "bytes": 544,
+        "o200k_tokens": 216
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 38.18,
+        "bytes": 465,
+        "o200k_tokens": 180
+      },
+      {
+        "command": "d DATASET_ID OFFER_ID",
+        "ms": 38.37,
+        "bytes": 517,
+        "o200k_tokens": 201
+      }
+    ],
+    "fetch_default": {
+      "bytes": 158,
+      "o200k_tokens": 59
+    }
+  },
+  "limitations": [
+    "Historical full turn on Linux laptop vs source acquisition on Mac; not an E2E latency comparison.",
+    "Tokenizer is o200k_base proxy for both tool texts; not billed token comparison.",
+    "One cold and one warm sample, no new model session."
+  ],
+  "rollout_sha256": "ccb7a4713e58193ee4a73d0ec6c4f063597c2e8598242fb455b984d600406396"
+}
