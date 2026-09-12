@@ -34,7 +34,7 @@ To keep the LLM context lean and avoid hallucination or high token latency, heav
 - **Analytics (`medisaving.analytics`):** Compares unit prices, filters by district/ubigeo, and ranks full medication baskets.
 - **UX (`medisaving.ux`):** Telegram bot engine, interactive message formatting, and actionable UI chips.
 
-```bash
+
 # Display CLI commands
 python -m medisaving --help
 
