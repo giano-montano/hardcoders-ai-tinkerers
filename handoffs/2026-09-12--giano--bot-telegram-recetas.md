@@ -19,8 +19,13 @@ Un bot de Telegram en Python puro (stdlib, **sin `pip install`**) que hace este 
 | 4 | Descarga la foto en `data/recetas/<chat_id>_<message_id>.jpg` | `bot.py` → `descargar_foto()` |
 | 5 | **Llama a `analizar_receta()`** y le manda al usuario lo que devuelva | `bot.py` → `manejar()`, final |
 
+> **Lee `AGENTS.md` antes de tocar nada.** Regla clave: todo texto que ve el
+> usuario va en **inglés** (es lo que se proyecta en la demo); el código y los
+> comentarios se quedan en español.
+
 Archivos:
 
+- `AGENTS.md` — convenciones del repo (idioma, stack, secretos).
 - `bot.py` — el bot (long polling, ~200 líneas).
 - `receta.py` — **el stub que hay que implementar.** Contrato ya definido con tipos.
 - `.env` → `TELEGRAM_BOT_TOKEN=` (el token de BotFather; `.env` está en `.gitignore`).
@@ -64,6 +69,7 @@ def analizar_receta(ruta_imagen: str, distrito: str, chat_id: int) -> ResultadoR
 ```
 
 **Reglas del contrato:**
+- ⚠️ **`mensaje` va EN INGLÉS.** Es lo que se proyecta en la demo. Si lo generas con un LLM, pide la respuesta en inglés en el prompt (no traduzcas después). Ver `AGENTS.md`.
 - `mensaje` es lo único que ve el usuario en Telegram. Sale con `parse_mode="Markdown"`, así que `*negrita*` funciona — pero ojo con `_` y `*` sueltos en nombres de medicamentos.
 - Si algo falla, devolver `ok=False` con un `mensaje` explicativo. **No lanzar excepción** (el bot la captura, pero el mensaje al usuario sale genérico y feo).
 - La función es síncrona y bloquea el polling del bot. Si tarda >~30 s, avísame y lo paso a un hilo.

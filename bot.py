@@ -55,24 +55,27 @@ ALIAS = {
     "vmt": "Villa María del Triunfo",
     "ves": "Villa El Salvador",
     "surco": "Santiago de Surco",
-    "la punta": "Cercado de Lima",
 }
 
+# Todo texto que ve el usuario va en inglés (es lo que se proyecta en la demo).
+# Ver AGENTS.md.
 MSG_DISTRITO = (
-    "Hola 👋 Soy tu asistente de recetas médicas.\n\n"
-    "¿En qué *distrito de Lima* estás? (escríbelo, p. ej. Miraflores)"
+    "Hi 👋 I'm your prescription assistant.\n\n"
+    "Which *district of Lima* are you in? (type it, e.g. Miraflores)"
 )
 MSG_DISTRITO_INVALIDO = (
-    "No reconozco ese distrito 🤔 Escríbelo tal cual, por ejemplo: "
+    "I don't recognize that district 🤔 Try typing it in full, for example: "
     "San Isidro, Comas, Villa El Salvador…"
 )
 MSG_PEDIR_FOTO = (
-    "Perfecto, {distrito} ✅\n\n"
-    "Ahora mándame una *foto de tu receta médica* 📄📷\n"
-    "Que se lea bien el nombre de los medicamentos."
+    "Great, {distrito} ✅\n\n"
+    "Now send me a *photo of your medical prescription* 📄📷\n"
+    "Make sure the medicine names are readable."
 )
-MSG_FALTA_FOTO = "Necesito una foto 📷 de la receta para poder leerla."
-MSG_PROCESANDO = "Recibí tu receta, la estoy analizando… ⏳"
+MSG_FALTA_FOTO = "I need a photo 📷 of the prescription to read it."
+MSG_PROCESANDO = "Got your prescription, analyzing it… ⏳"
+MSG_SOLO_FOTO = "Please send it as a *photo*, not as a file attachment 📷"
+MSG_ERROR_ANALISIS = "Oops, the prescription analysis failed 😵 Please try again."
 
 
 def normalizar(texto: str) -> str:
@@ -163,7 +166,7 @@ def manejar(token, mensaje):
     # --- Paso 2: foto de la receta -------------------------------------------
     if not mensaje.get("photo"):
         if mensaje.get("document"):
-            enviar(token, chat_id, "Mándamela como *foto*, no como archivo adjunto 📷")
+            enviar(token, chat_id, MSG_SOLO_FOTO)
         else:
             enviar(token, chat_id, MSG_FALTA_FOTO)
         return
@@ -177,10 +180,10 @@ def manejar(token, mensaje):
         resultado = analizar_receta(ruta, estado["distrito"], chat_id)
     except Exception as e:
         print("error en analizar_receta:", e)
-        enviar(token, chat_id, "Ups, falló el análisis de la receta 😵 Intenta de nuevo.")
+        enviar(token, chat_id, MSG_ERROR_ANALISIS)
         return
 
-    enviar(token, chat_id, resultado.get("mensaje") or "Listo.")
+    enviar(token, chat_id, resultado.get("mensaje") or "Done.")
     # Se queda en PEDIR_FOTO: puede mandar otra receta sin repetir el distrito.
 
 

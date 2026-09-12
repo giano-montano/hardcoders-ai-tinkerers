@@ -20,7 +20,8 @@ class ResultadoReceta(TypedDict):
     ok: bool                        # False si la imagen no es legible / no es receta
     medicamentos: list[Medicamento]
     texto_crudo: str                # OCR o transcripción completa (para depurar)
-    mensaje: str                    # texto listo para mandarle al usuario en Telegram
+    mensaje: str                    # texto listo para mandarle al usuario en Telegram.
+                                    # ⚠️ EN INGLÉS: sale proyectado en la demo (ver AGENTS.md)
 
 
 def analizar_receta(ruta_imagen: str, distrito: str, chat_id: int) -> ResultadoReceta:
@@ -34,14 +35,15 @@ def analizar_receta(ruta_imagen: str, distrito: str, chat_id: int) -> ResultadoR
     Returns:
         ResultadoReceta. Si algo falla, devolver ok=False y un `mensaje` explicativo;
         NO lanzar excepción (el bot ya captura, pero el mensaje sale más feo).
+        `mensaje` SIEMPRE en inglés — es lo que se ve en la demo (AGENTS.md).
     """
     return {
         "ok": False,
         "medicamentos": [],
         "texto_crudo": "",
         "mensaje": (
-            "🚧 El analizador de recetas todavía no está conectado.\n"
-            f"Recibí tu foto ({ruta_imagen}) y tu distrito ({distrito}). "
-            "En cuanto el módulo esté listo te devuelvo los medicamentos."
+            "🚧 The prescription analyzer isn't wired up yet.\n"
+            f"I got your photo ({ruta_imagen}) and your district ({distrito}). "
+            "As soon as the module is ready I'll send back your medicines."
         ),
     }
