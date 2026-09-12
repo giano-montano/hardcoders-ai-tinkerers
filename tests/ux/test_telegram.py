@@ -1,7 +1,8 @@
 from types import SimpleNamespace
 import unittest
 
-from medisaving.ux import STATUS_MESSAGES, TELEGRAM_SAFE_UTF16, render_status, split_telegram, telegram
+from medisaving.ux import (STATUS_MESSAGES, TELEGRAM_SAFE_UTF16, google_maps_url,
+                           prescription_notice, render_status, split_telegram, telegram)
 from tests.helpers import fixture
 
 
@@ -32,12 +33,43 @@ class TelegramTests(unittest.TestCase):
         store = MemoryStore(self.ranking(fixture()))
         result = telegram(SimpleNamespace(result_id="a" * 32, expand=False), store)
         text = "\n".join(result["messages"])
-        self.assertIn("Unit price: S/ 1.80 | Box price: S/ 54.00 | Units per box: 30", text)
-        self.assertIn("Unit price: not reported | Box price: S/ 60.00", text)
+        self.assertIn("Box price: S/ 54.00 · 30 units", text)
+        self.assertIn("Box price: S/ 60.00", text)
         self.assertIn("Coverage is partial", text)
         self.assertIn("1 more comparable option is available", text)
         self.assertIsNone(result["parse_mode"])
         self.assertGreater(result["metrics"]["output_utf8_bytes"], 1)
+
+    def test_summary_exposes_map_and_detail_actions(self):
+        store = MemoryStore(self.ranking(fixture()))
+        result = telegram(SimpleNamespace(result_id="a" * 32, expand=False), store)
+        buttons = result["keyboards"][0]["inline_keyboard"]
+        self.assertEqual(buttons[0][0]["text"], "Open map")
+        self.assertIn("google.com/maps/search/?api=1", buttons[0][0]["url"])
+        self.assertEqual(buttons[-1][0]["callback_data"], "ux:details:o0")
+        self.assertIn("Option 1 — details", result["interaction_responses"]["ux:details:o0"]["messages"][0])
+        self.assertIn("ux:expand", result["interaction_responses"])
+
+    def test_quantity_alert_is_only_based_on_verified_structured_data(self):
+        data = self.ranking(fixture())
+        row = data["groups"][0]["offers"][0]
+        data["prescription_checks"] = [{
+            "medicine_key": "escitalopram", "prescribed_units": 45,
+            "quantity_confidence": "high", "partial_dispensing_available": True,
+        }]
+        result = telegram(SimpleNamespace(result_id="a" * 32, expand=False), MemoryStore(data))
+        self.assertIn("appears to need 45 units", "\n".join(result["messages"]))
+        self.assertIn("permitted partial dispensing", "\n".join(result["messages"]))
+        self.assertIn("Do not change the prescribed dose", "\n".join(result["messages"]))
+        low_confidence = prescription_notice(row, {"prescribed_units": 45, "quantity_confidence": "low"})
+        self.assertIn("could not confirm", low_confidence)
+        self.assertNotIn("another box", low_confidence)
+
+    def test_map_needs_a_branch_address_not_the_user_location(self):
+        row = self.ranking(fixture())["groups"][0]["offers"][0]
+        self.assertIn("SYNTHETIC+ADDRESS+2", google_maps_url(row))
+        row["address"] = None
+        self.assertIsNone(google_maps_url(row))
 
     def test_expand_includes_remaining_ranked_options(self):
         store = MemoryStore(self.ranking(fixture()))
