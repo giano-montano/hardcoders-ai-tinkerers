@@ -8,6 +8,7 @@ import unicodedata
 from ..core import validate_dataset
 from .client import Client
 from .normalize import PROFILE, offer, strength, text as canonical_text
+from .identity import PROFILE as IDENTITY_PROFILE
 
 
 def view(args, store):
@@ -188,7 +189,7 @@ def fetch(args, store):
         forms.setdefault((item["source_group"], item["strength"]), set()).add(item["form"])
     if any(len(values) > 1 for values in forms.values()):
         warnings.append("verify_offer_forms")
-    source.update(normalization=PROFILE, warnings=sorted(set(warnings)),
+    source.update(normalization=PROFILE, identity_profile=IDENTITY_PROFILE, warnings=sorted(set(warnings)),
                   rejected_rows=rejected, duplicate_rows=duplicates)
     dataset = {"schema_version": 1, "kind": "offers", "source": source,
                "offers": list(normalized.values())}

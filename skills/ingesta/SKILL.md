@@ -46,7 +46,7 @@ redundantes. Conservan textos originales en source_values y warnings en source.
 `verify_offer_forms` pide comprobar forma; por sí solo no significa descarga parcial.
 `diagnostics_unavailable` señala diagnóstico histórico desconocido en un import.
 Con identity_status=source_group_only no confirmar coincidencia de sustancia.
-No unir sales, sinónimos ni unidades distintas por intuición. Datos antiguos sin
+source.identity_profile=opm-identity-v1 aplica una única regla verificada: en OPM 1515:3, 20mg, tableta/comprimido recubierto, escitalopram oxalato tiene medicine_key=escitalopram. Conserva source_values e identity_rule; las dos formas siguen separadas. No declara intercambiabilidad clínica. No unir otras sales, sinónimos ni unidades por intuición. Datos antiguos sin
 perfil necesitan reimportación explícita antes de mezclarse con los nuevos; el CLI
 no migra artefactos guardados automáticamente.
 

@@ -1,0 +1,37 @@
+{
+  "source_rows": 122,
+  "source_labels": {
+    "ESCITALOPRAM OXALATO": 99,
+    "ESCITALOPRAM": 23
+  },
+  "before": {
+    "eligible": 23,
+    "selected": [
+      {
+        "form": "tableta recubierta",
+        "unit_price_cents": 550,
+        "pack_price_cents": 16500,
+        "pack_units": 30
+      }
+    ]
+  },
+  "after": {
+    "eligible": 122,
+    "selected": [
+      {
+        "form": "comprimido recubierto",
+        "unit_price_cents": 348,
+        "pack_price_cents": 10430,
+        "pack_units": 30
+      },
+      {
+        "form": "tableta recubierta",
+        "unit_price_cents": 350,
+        "pack_price_cents": 10500,
+        "pack_units": 30
+      }
+    ]
+  },
+  "capture_sha256": "2c4fae3e7cc2b8cdc9ac88149bf4d8473fa14efbcd476170aa083e438f1cca80",
+  "method": "Same saved real OPM response, old literal keys versus opm-identity-v1; deterministic rank, no LLM or Telegram messages."
+}

@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 from copy import deepcopy
 import re
 import unicodedata
+from .identity import PROFILE as IDENTITY_PROFILE, resolve
 
 
 PROFILE = "text-v1"
@@ -39,7 +40,7 @@ def canonical_offer(row):
         raise ValueError("source_values must contain strings or null")
     result.update(medicine_key=key, strength=strength(row["strength"]), form=text(row["form"]),
                   identity_status="source_group_only" if fallback else "substance_reported")
-    return result
+    return resolve(result, text(original.get("substance") or ""))
 
 
 def canonical_import(dataset):
@@ -47,10 +48,13 @@ def canonical_import(dataset):
     source = result["source"]
     if source.get("normalization") not in (None, PROFILE):
         raise ValueError("Unsupported normalization profile")
+    if source.get("identity_profile") not in (None, IDENTITY_PROFILE):
+        raise ValueError("Unsupported identity profile")
     warnings = source.get("warnings", ["diagnostics_unavailable"])
     if not isinstance(warnings, list) or not all(isinstance(w, str) for w in warnings):
         raise ValueError("source.warnings must be an array of strings")
-    source.update(normalization=PROFILE, warnings=sorted(set(warnings)))
+    source.update(normalization=PROFILE, identity_profile=IDENTITY_PROFILE,
+                  warnings=sorted(set(warnings)))
     # These counters describe this import; preserve prior diagnostics when present.
     for field in ("rejected_rows", "duplicate_rows"):
         value = source.setdefault(field, 0)

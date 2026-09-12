@@ -1,3 +1,5 @@
+> Actualización 2026-09-12: la separación de sales de text-v1 descrita abajo tiene una excepción aditiva y versionada, `opm-identity-v1`. Ver [contrato de identidad](ingesta-identidad.md). Analytics consume medicine_key sin cambios; dosis y formas siguen separadas.
+
 # Contrato propuesto de ingesta para analytics
 
 Fecha: 2026-09-12. Base de implementación: `team/ingesta`, commit `3edf3b5`.
