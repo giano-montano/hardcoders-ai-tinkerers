@@ -34,3 +34,20 @@ en un PR separado. No cambiar archivos de otro equipo para desbloquear el propio
 La mejora esperada es sacar descarga, filtrado y aritmética del contexto del modelo.
 No hay una reducción de latencia medida todavía: los equipos deben registrar
 tiempo de fuente, cómputo y render, bytes de salida y aciertos de caché.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+Below is a quick preview of MedSavings Bot in action: processing medical prescriptions, querying DIGEMID pricing and pharmacy availability, and delivering real-time, location-based options.
+
+<img width="932" height="971" alt="image" src="https://github.com/user-attachments/assets/43377379-6eda-4d48-a472-d022e5dd69fb" />
+
+<img width="912" height="966" alt="image" src="https://github.com/user-attachments/assets/2e01759f-7529-4f1c-8246-31a1cdd8427a" />
+
+<img width="907" height="970" alt="image" src="https://github.com/user-attachments/assets/d072ef17-6af2-49ff-84d4-9f89f41ce4e4" />
+
+  <img width="976" height="952" alt="image" src="https://github.com/user-attachments/assets/2dc54ac1-001e-4eb4-80d6-d631079f4321" />
+
+  <img width="1878" height="1197" alt="image" src="https://github.com/user-attachments/assets/61159cd6-5a78-4949-80b4-a8f58131b5f0" />
+
+
+
+
