@@ -95,6 +95,7 @@ export async function runAgent({ chatId, text, images = [], onEvent = () => {} }
   });
   const response = readJSON(path.join(dir, output.replace('/work/', 'work/')), null);
   if (!response?.text?.trim() || !Array.isArray(response.attachments)) throw new Error('Codex no produjo respuesta válida');
+  if (response.presentations !== undefined && (!Array.isArray(response.presentations) || response.presentations.length > 10 || response.presentations.some(id => !/^[a-f0-9]{32}$/.test(id)))) throw new Error('Presentaciones inválidas');
   const base = fs.realpathSync(path.join(dir, 'work/output'));
   response.attachments = response.attachments.map(file => {
     if (!file.startsWith('/work/output/') || !file.endsWith('.pdf')) throw new Error('Adjunto inválido');

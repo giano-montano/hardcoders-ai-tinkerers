@@ -1,9 +1,28 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["text", "attachments"],
+  "required": [
+    "text",
+    "attachments",
+    "presentations"
+  ],
   "properties": {
-    "text": { "type": "string" },
-    "attachments": { "type": "array", "items": { "type": "string" } }
+    "text": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "presentations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{32}$"
+      },
+      "maxItems": 10
+    }
   }
 }

@@ -66,7 +66,7 @@ for substance,dose,form in [('escitalopram','20mg',None),('aripiprazol','5mg',No
     rendered=med('show',enriched['result_id'])
     assert rendered['messages'] and rendered['parse_mode'] is None
     for message in rendered['messages']:assert len(message.encode('utf-16-le'))//2<=3500
-    output='\\n'.join(rendered['messages'])
+    output='\\n'.join(rendered['messages']+[m for action in rendered['interaction_responses'].values() for m in action.get('messages',[])])
     for group in joined['groups']:
         for row in group['offers']:
             assert ' '.join(row['address'].split()) in output and ' '.join(row['pharmacy'].split()) in output

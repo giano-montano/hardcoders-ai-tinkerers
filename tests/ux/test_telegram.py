@@ -87,6 +87,16 @@ class TelegramTests(unittest.TestCase):
         self.assertGreater(len(chunks), 1)
         self.assertTrue(all(len(item.encode("utf-16-le")) // 2 <= TELEGRAM_SAFE_UTF16 for item in chunks))
 
+    def test_split_cards_keep_details_and_keyboard_on_correct_message(self):
+        data = self.ranking(fixture())
+        data["groups"][0]["offers"][0]["address"] = "📍" * 4000
+        rendered = telegram(SimpleNamespace(result_id="a" * 32, expand=False), MemoryStore(data))
+        self.assertTrue(rendered["interaction_responses"])
+        for keyboard in rendered["keyboards"]:
+            self.assertLess(keyboard["message_index"], len(rendered["messages"]))
+        self.assertEqual(rendered["keyboards"][0]["message_index"], 0)
+        self.assertGreater(rendered["keyboards"][1]["message_index"], 1)
+
     def test_explicit_statuses_do_not_invent_context(self):
         for state, expected in STATUS_MESSAGES.items():
             rendered = render_status(SimpleNamespace(state=state), MemoryStore({}))

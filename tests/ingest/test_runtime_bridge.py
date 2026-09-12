@@ -33,7 +33,7 @@ class RuntimeBridgeTests(unittest.TestCase):
             self.assertEqual(row["presentation"], "Caja")
             self.assertEqual(store.get(selected["result_id"], "ranking"), original)
             rendered = telegram(SimpleNamespace(result_id=joined["result_id"], expand=False), store)
-            self.assertIn("Presentation: Caja", "\n".join(rendered["messages"]))
+            self.assertIn("Presentation: Caja", "\n".join(rendered["interaction_responses"]["ux:details:o0"]["messages"]))
             args.form = "tableta sublingual"
             self.assertEqual(rank(args, store)["selected"], 0)
 

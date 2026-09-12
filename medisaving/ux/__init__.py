@@ -213,11 +213,12 @@ def _presentation(result_id: str, result: dict[str, Any], expand: bool) -> dict[
     footer_keyboard.append([{"text": "New prescription", "callback_data": "ux:new"}])
     interaction_responses["ux:new"] = {"action": "start_new_prescription"}
     keyboards.append({"message_index": len(messages) - 1, "inline_keyboard": footer_keyboard})
-    chunks = [chunk for message in messages for chunk in split_telegram(message)]
-    # Summaries are intentionally short, so a keyboard is attached to one message only.
-    if len(chunks) != len(messages):
-        keyboards = []
-        interaction_responses = {}
+    chunks, offsets = [], []
+    for message in messages:
+        offsets.append(len(chunks))
+        chunks.extend(split_telegram(message))
+    for keyboard in keyboards:
+        keyboard["message_index"] = offsets[keyboard["message_index"]]
     render_ms = round((time.perf_counter() - started) * 1000, 3)
     return {"kind": "telegram", "schema_version": 1, "result_id": result_id,
             "parse_mode": None, "messages": chunks, "keyboards": keyboards,

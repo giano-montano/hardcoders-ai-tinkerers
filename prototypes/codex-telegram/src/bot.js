@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import dns from 'node:dns';
 import net from 'node:net';
-import { DATA, atomicJSON, readJSON, prepareChat, runAgent } from './codex.js';
+import { DATA, CLI_DIR, atomicJSON, readJSON, prepareChat, runAgent } from './codex.js';
+import { loadPresentation, packets, callbackAction, expandPresentation } from './ux.js';
 
 net.setDefaultAutoSelectFamily(false);
 dns.setDefaultResultOrder('ipv4first');
@@ -12,6 +13,7 @@ if (!token) throw new Error('Falta TELEGRAM_BOT_TOKEN');
 const stateFile = path.join(DATA, 'telegram.json');
 const state = readJSON(stateFile, { offset: 0, jobs: [] });
 for (const job of state.jobs) if (job.status === 'running') job.status = job.response ? 'ready' : 'pending';
+state.ui ||= {};
 const save = () => atomicJSON(stateFile, state);
 const activeChats = new Set();
 const concurrency = Number(process.env.CONCURRENCY || 2);
@@ -59,13 +61,46 @@ async function sendPDF(chatId, file) {
   if (!result.ok) throw new Error('Telegram no aceptó el PDF');
 }
 
+async function deliverPresentations(job) {
+  const dir = prepareChat(job.chatId);
+  const items = (job.response.presentations || []).flatMap(id =>
+    packets(loadPresentation(dir, id), id).map(packet => ({ id, packet })));
+  job.cardsSent ||= 0;
+  for (const { id, packet } of items.slice(job.cardsSent)) {
+    const sent = await telegram('sendMessage', { chat_id: job.chatId, ...packet,
+      link_preview_options: { is_disabled: true } });
+    state.ui[`${job.chatId}:${sent.message_id}`] = { presentation_id: id,
+      actions: (packet.reply_markup?.inline_keyboard || []).flat().map(b => b.callback_data).filter(Boolean) };
+    job.cardsSent++; save();
+  }
+}
+
+function interactionResponse(job) {
+  const dir = prepareChat(job.chatId);
+  const { presentation, response } = callbackAction(job.callback, state.ui, dir);
+  if (response.action === 'start_new_prescription') {
+    fs.rmSync(path.join(dir, 'session.json'), { force: true });
+    return { text: 'Nueva conversación. Envíame los medicamentos y tu distrito.', attachments: [] };
+  }
+  if (response.action === 'render' && response.expand === true) {
+    return { text: '', attachments: [], presentations: [expandPresentation(dir, CLI_DIR, presentation.result_id)] };
+  }
+  if (response.action === 'call_pharmacy') {
+    return { text: `Teléfono reportado de la farmacia: ${response.phone}`, attachments: [] };
+  }
+  if (Array.isArray(response.messages)) return { text: response.messages.join('\n\n'), attachments: [] };
+  throw new Error('Unsupported interaction');
+}
+
 async function processJob(job) {
   activeChats.add(job.chatId); job.status = 'running'; save();
   let typing;
   try {
     const message = job.message;
     if (!job.response) {
-      if (message.text?.startsWith('/start')) {
+      if (job.callback) {
+        job.response = interactionResponse(job);
+      } else if (message.text?.startsWith('/start')) {
         job.response = { text: '💊 Envíame una foto o escribe tus medicamentos con dosis y presentación, y dime tu distrito. Buscaré precios reportados en DIGEMID, con farmacia, dirección y precio por unidad/caja.', attachments: [] };
       } else if (message.text === '/nuevo') {
         const dir = prepareChat(job.chatId); fs.rmSync(path.join(dir, 'session.json'), { force: true });
@@ -87,6 +122,7 @@ async function processJob(job) {
       job.status = 'ready'; save();
     }
     if (!job.textSent) { await sendText(job.chatId, job.response.text); job.textSent = true; save(); }
+    await deliverPresentations(job);
     job.filesSent ||= 0;
     for (const file of job.response.attachments.slice(job.filesSent)) { await sendPDF(job.chatId, file); job.filesSent++; save(); }
     job.status = 'done';
@@ -115,8 +151,16 @@ async function main() {
   const scheduler = setInterval(dispatch, 500); scheduler.unref();
   while (!stopping) {
     try {
-      const updates = await telegram('getUpdates', { offset: state.offset, timeout: 25, allowed_updates: ['message'] });
+      const updates = await telegram('getUpdates', { offset: state.offset, timeout: 25, allowed_updates: ['message', 'callback_query'] });
       for (const update of updates) {
+        const callback = update.callback_query;
+        if (callback) {
+          await telegram('answerCallbackQuery', { callback_query_id: callback.id }).catch(() => {});
+          if (callback.message?.chat.type === 'private' && String(callback.from?.id) === String(callback.message.chat.id)
+              && !state.jobs.some(j => j.id === update.update_id)) {
+            state.jobs.push({ id: update.update_id, chatId: callback.message.chat.id, callback, status: 'pending' });
+          }
+        }
         const m = update.message;
         if (m?.chat.type === 'private' && !m.from?.is_bot && !state.jobs.some(j => j.id === update.update_id)) {
           state.jobs.push({ id: update.update_id, chatId: m.chat.id, message: m, status: 'pending' });
