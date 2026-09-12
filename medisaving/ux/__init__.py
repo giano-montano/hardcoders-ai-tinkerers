@@ -16,22 +16,23 @@ DEFAULT_OPTIONS_PER_MEDICINE = 2
 
 STATUS_MESSAGES = {
     "unreadable_photo": (
-        "I could not read the prescription photo. Please send a new, well-lit photo "
-        "with the medicine names and directions fully visible."
+        "📷 I could not read the prescription.\n\n"
+        "Please send another photo in good light, with the medicine names and instructions fully visible."
     ),
     "missing_district": (
-        "Please tell me your district in Lima so I can look for nearby options."
+        "📍 Where are you in Lima?\n\n"
+        "Tell me your district and I will look for nearby pharmacies. For example: Miraflores."
     ),
     "ambiguous_query": (
-        "I found more than one possible medicine. Please confirm the exact name, "
-        "strength, and form shown on your prescription."
+        "🔎 I found more than one possible medicine.\n\n"
+        "Please check the name, strength, and form shown on your prescription."
     ),
     "no_results": (
-        "No comparable offers were found for this search. You can try another district "
-        "or ask a pharmacist to confirm local availability."
+        "😕 I could not find a matching option in this search.\n\n"
+        "Try another district, or ask a pharmacist about local availability."
     ),
-    "error": "Something went wrong while preparing your result. Please try again.",
-    "recover": "You can send another prescription photo or start a new search when you are ready.",
+    "error": "⚠️ I could not prepare your result.\n\nPlease try again in a moment.",
+    "recover": "✨ Ready when you are.\n\nSend another prescription photo to start a new search.",
 }
 
 
@@ -59,6 +60,40 @@ def display(value: Any) -> str:
     return " ".join(str(value).split())
 
 
+def known(value: Any) -> str | None:
+    """Return external data only when it is useful to show to a person."""
+    if value is None or not str(value).strip():
+        return None
+    return " ".join(str(value).split())
+
+
+def _price(value: int | None) -> str | None:
+    return None if value is None else money(value)
+
+
+def price_summary(row: dict[str, Any]) -> str:
+    """Connect the per-box and per-unit values in one easy-to-read sentence."""
+    box = _price(row.get("pack_price_cents"))
+    unit = _price(row.get("unit_price_cents"))
+    if box and unit:
+        return f"💰 {box} per box · {unit} each"
+    if box:
+        return f"💰 {box} per box"
+    if unit:
+        return f"💰 {unit} each"
+    return "💰 Price needs confirmation"
+
+
+def pack_summary(row: dict[str, Any]) -> str | None:
+    units = known(row.get("pack_units"))
+    presentation = known(row.get("presentation"))
+    if presentation:
+        return f"📦 Box: {presentation}"
+    if units:
+        return f"📦 {units} per box"
+    return None
+
+
 def _location_query(row: dict[str, Any]) -> str | None:
     """Build a branch search query without requiring the user's location."""
     fields = (row.get("pharmacy"), row.get("address"), row.get("district"), "Lima, Peru")
@@ -76,26 +111,39 @@ def google_maps_url(row: dict[str, Any]) -> str | None:
 
 def offer_summary_text(row: dict[str, Any], position: int) -> str:
     """Keep the first screen short enough to scan comfortably on a phone."""
-    return (
-        f"Option {position}\n"
-        f"Medicine: {display(row.get('medicine'))} · {display(row.get('strength'))} · {display(row.get('form'))}\n"
-        f"Pharmacy: {display(row.get('pharmacy'))} ({display(row.get('district'))})\n"
-        f"Box price: {money(row.get('pack_price_cents'))} · {display(row.get('pack_units'))} units\n"
-        f"Address: {display(row.get('address'))}"
-    )
+    medicine = " · ".join(filter(None, (known(row.get("medicine")), known(row.get("strength")),
+                                           known(row.get("form"))))) or "Medicine details unavailable"
+    pharmacy = known(row.get("pharmacy")) or "Pharmacy details unavailable"
+    district = known(row.get("district"))
+    place = f"{pharmacy} · {district}" if district else pharmacy
+    lines = [f"💊 OPTION {position}", medicine, f"🏪 {place}", price_summary(row)]
+    if pack := pack_summary(row):
+        lines.append(pack)
+    if address := known(row.get("address")):
+        lines.append(f"📍 {address}")
+    return "\n\n".join(lines)
 
 
 def offer_detail_text(row: dict[str, Any], position: int) -> str:
     """Details are available on demand instead of crowding the first screen."""
-    return (
-        f"Option {position} — details\n"
-        f"Medicine: {display(row.get('medicine'))} · {display(row.get('strength'))} · {display(row.get('form'))}\n"
-        f"Pharmacy: {display(row.get('pharmacy'))} ({display(row.get('district'))})\n"
-        f"Address: {display(row.get('address'))}\nLaboratory: {display(row.get('laboratory'))}\n"
-        f"Unit price: {money(row.get('unit_price_cents'))} | Box price: {money(row.get('pack_price_cents'))} | "
-        f"Units per box: {display(row.get('pack_units'))}\nPresentation: {display(row.get('presentation'))}\n"
-        f"Phone: {display(row.get('phone'))} | Reported: {display(row.get('reported_at'))}"
-    )
+    medicine = " · ".join(filter(None, (known(row.get("medicine")), known(row.get("strength")),
+                                           known(row.get("form"))))) or "Medicine details unavailable"
+    lines = [f"ℹ️ OPTION {position} — DETAILS", f"💊 {medicine}"]
+    if pharmacy := known(row.get("pharmacy")):
+        district = known(row.get("district"))
+        lines.append(f"🏪 {pharmacy}{f' · {district}' if district else ''}")
+    if address := known(row.get("address")):
+        lines.append(f"📍 {address}")
+    lines.append(price_summary(row))
+    if pack := pack_summary(row):
+        lines.append(pack)
+    if laboratory := known(row.get("laboratory")):
+        lines.append(f"🏭 Laboratory: {laboratory}")
+    if phone := known(row.get("phone")):
+        lines.append(f"☎️ {phone}")
+    if reported := known(row.get("reported_at")):
+        lines.append(f"🕒 Price reported: {reported}")
+    return "\n\n".join(lines)
 
 
 def _quantity_check(result: dict[str, Any], medicine_key: Any) -> dict[str, Any] | None:
@@ -114,14 +162,14 @@ def prescription_notice(row: dict[str, Any], check: dict[str, Any] | None) -> st
         return None
     if check.get("requires_pharmacist_verification") is True:
         return (
-            "Pharmacist verification is needed before purchase. Please bring the original "
-            "prescription and do not change the prescribed dose."
+            "⚠️ PHARMACIST CHECK\n\nThis medicine needs pharmacist verification before purchase. "
+            "Bring the original prescription and do not change the prescribed dose."
         )
     required = check.get("prescribed_units")
     pack_units = row.get("pack_units")
     confidence = check.get("quantity_confidence")
     if confidence == "low" and required is not None:
-        return "We could not confirm the prescribed quantity. Please verify it with your pharmacist."
+        return "⚠️ QUICK CHECK\n\nI could not confirm the prescribed quantity. Please verify it with your pharmacist."
     if (confidence in (None, "high") and isinstance(required, int) and required > 0
             and isinstance(pack_units, int) and required > pack_units):
         if check.get("partial_dispensing_available") is True:
@@ -129,8 +177,8 @@ def prescription_notice(row: dict[str, Any], check: dict[str, Any] | None) -> st
         else:
             ending = "Please confirm with the pharmacist whether you need another box."
         return (
-            f"Prescription check: this prescription appears to need {required} units; "
-            f"this box contains {pack_units}. {ending} Do not change the prescribed dose."
+            f"⚠️ QUICK CHECK\n\nYour prescription appears to need {required} units. "
+            f"This box has {pack_units}. {ending}\n\nDo not change the prescribed dose."
         )
     return None
 
@@ -140,11 +188,11 @@ def offer_keyboard(row: dict[str, Any], card_id: str) -> list[list[dict[str, str
     first_row = []
     maps = google_maps_url(row)
     if maps:
-        first_row.append({"text": "Open map", "url": maps})
+        first_row.append({"text": "🗺️ Open map", "url": maps})
     if row.get("phone"):
-        first_row.append({"text": "Call pharmacy", "callback_data": f"ux:call:{card_id}"})
+        first_row.append({"text": "☎️ Call pharmacy", "callback_data": f"ux:call:{card_id}"})
     keyboard = [first_row] if first_row else []
-    keyboard.append([{"text": "More details", "callback_data": f"ux:details:{card_id}"}])
+    keyboard.append([{"text": "ℹ️ More details", "callback_data": f"ux:details:{card_id}"}])
     return keyboard
 
 
@@ -165,13 +213,22 @@ def split_telegram(text: str) -> list[str]:
 
 
 def source_text(source: dict[str, Any], has_results: bool, hidden_options: int) -> str:
-    prefix = STATUS_MESSAGES["no_results"] if not has_results else ""
-    more = (f" {hidden_options} more comparable option{' is' if hidden_options == 1 else 's are'} available. "
-            "Use the button below to see all options." if hidden_options else "")
-    partial = " Coverage is partial for the stated scope." if not source.get("complete") else ""
-    return (f"{prefix}{more}\nSource: {display(source.get('name'))}. Coverage: {display(source.get('scope'))}. "
-            f"Fetched: {display(source.get('fetched_at'))}.{partial}\n"
-            "Prices and availability can change. Please confirm with the pharmacy before you go.")
+    lines = []
+    if not has_results:
+        lines.append(STATUS_MESSAGES["no_results"])
+    elif hidden_options:
+        lines.append(f"✨ I found {hidden_options} more option{'s' if hidden_options != 1 else ''}. "
+                     "Tap below to see them.")
+    scope = known(source.get("scope"))
+    fetched = known(source.get("fetched_at"))
+    if scope:
+        lines.append(f"🔎 Search area: {scope}.")
+    if fetched:
+        lines.append(f"🕒 Last checked: {fetched}.")
+    if not source.get("complete"):
+        lines.append("ℹ️ This search may not include every pharmacy.")
+    lines.append("🔔 Before you go, call the pharmacy to confirm the price and availability.")
+    return "\n\n".join(lines)
 
 
 def _presentation(result_id: str, result: dict[str, Any], expand: bool) -> dict[str, Any]:
@@ -200,7 +257,7 @@ def _presentation(result_id: str, result: dict[str, Any], expand: bool) -> dict[
                 messages.append(notice)
                 keyboards.append({"message_index": len(messages) - 1,
                                   "inline_keyboard": [[{
-                                      "text": "Why this alert?",
+                                      "text": "ℹ️ Why this alert?",
                                       "callback_data": f"ux:quantity:{card_id}",
                                   }]]})
                 interaction_responses[f"ux:quantity:{card_id}"] = {"messages": [notice]}
@@ -208,9 +265,9 @@ def _presentation(result_id: str, result: dict[str, Any], expand: bool) -> dict[
     messages.append(source_text(result["source"], bool(result["groups"]), hidden_options))
     footer_keyboard = []
     if hidden_options:
-        footer_keyboard.append([{"text": "See all options", "callback_data": "ux:expand"}])
+        footer_keyboard.append([{"text": "🔎 See all options", "callback_data": "ux:expand"}])
         interaction_responses["ux:expand"] = {"action": "render", "expand": True}
-    footer_keyboard.append([{"text": "New prescription", "callback_data": "ux:new"}])
+    footer_keyboard.append([{"text": "📷 New prescription", "callback_data": "ux:new"}])
     interaction_responses["ux:new"] = {"action": "start_new_prescription"}
     keyboards.append({"message_index": len(messages) - 1, "inline_keyboard": footer_keyboard})
     chunks, offsets = [], []

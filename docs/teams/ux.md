@@ -38,6 +38,13 @@ UX no envía mensajes ni procesa callbacks.
   bot debe pedir una ubicación opcional y explícita, con distrito como alternativa.
 - `More details`, `See all options` y `New prescription` son acciones del
   adaptador, no texto que una persona deba escribir.
+- Cada primer mensaje es una tarjeta visual breve: iconos consistentes para
+  medicamento, farmacia, precio, presentación y ubicación; los detalles solo
+  aparecen cuando la persona pulsa el botón. Evitar listas largas, etiquetas
+  técnicas y el texto repetitivo `not reported`.
+- Los iconos Unicode viajan en texto plano y son seguros con `parse_mode: null`.
+  Un sticker real de Telegram requiere un `file_id` o un archivo WebP/TGS y el
+  adaptador de entrega debe enviarlo con `sendSticker`; UX no inventa esos IDs.
 - `prescription_checks` es metadato opcional y verificado aguas arriba por
   medicamento: `medicine_key`, `prescribed_units`, `quantity_confidence`,
   `partial_dispensing_available` y/o `requires_pharmacist_verification`.
