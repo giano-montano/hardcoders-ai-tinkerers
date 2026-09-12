@@ -36,6 +36,7 @@ def register(areas):
 
 
 def import_offers(args, store):
-    data = validate_dataset(json.loads(Path(args.path).read_text()))
+    from .normalize import canonical_import
+    data = validate_dataset(canonical_import(validate_dataset(json.loads(Path(args.path).read_text()))))
     return {"dataset_id": store.put(data), "count": len(data["offers"]),
             "source": data["source"]}

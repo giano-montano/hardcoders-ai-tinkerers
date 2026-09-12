@@ -3,8 +3,8 @@
 Fecha: 2026-09-12. Base de implementación: `team/ingesta`, commit `3edf3b5`.
 Responde a `docs/analytics-dependencias-ingesta.md` de `main` (`069ec85`).
 
-**Estado: propuesta para trabajo paralelo; no es una implementación terminada ni
-un acuerdo ya aceptado por analytics.** No sustituye todavía `docs/cli-contract.md`.
+**Estado: perfil implementado en ingesta, pendiente de acuerdo con analytics.**
+No sustituye todavía `docs/cli-contract.md` ni declara aceptación por el otro equipo.
 Los equipos pueden construir contra los ejemplos de este documento. Las diferencias
 se resuelven aquí antes de modificar el contrato compartido o fusionar ramas.
 
@@ -81,7 +81,8 @@ Proponemos registrar como extensiones opcionales de Offers v1:
 | `identity_status` | enum descrito arriba | Distinguir sustancia reportada de respaldo |
 | `source_values` | objeto de textos/null | Evidencia original para normalización |
 
-Los primeros cuatro ya existen en fetch. Los últimos dos son compromiso pendiente.
+Los seis campos ya se producen en fetch; import conserva los opcionales disponibles
+y añade identity_status y source_values mediante el mismo normalizador.
 Analytics conserva campos desconocidos, pero no necesita ninguno de estos para
 su ranking básico. Los imports antiguos no requieren códigos de DIGEMID para ser
 válidos. Sin identificadores oficiales suficientes no se puede ejecutar `ingest d`.
@@ -117,10 +118,15 @@ describe descarga; los contadores y warnings explican la pérdida posterior.
 | `rejected_rows` | Filas no utilizables por identidad, ubicación, concentración o dinero |
 | `conflicting_duplicate` | Misma identidad con datos diferentes; no resolver silenciosamente |
 | `verify_offer_forms` | Un grupo/concentración incluye formas distintas; no inferir equivalencia |
+| `diagnostics_unavailable` | Import de datos anteriores sin advertencias de origen; no asumir ausencia de problemas |
 
 La ausencia de warnings en un dataset antiguo significa «sin diagnóstico
 disponible», no «sin problemas». Analytics debe reenviar source intacto y puede
 resumir estos códigos sin leer artefactos de estadísticas ni logs de ingesta.
+Al reimportar esos datos se hace explícito `diagnostics_unavailable`. Los contadores
+ausentes se inicializan a cero para la operación actual de importación; no prueban
+que la descarga histórica haya tenido cero rechazos. Se preservan contadores previos
+si existen y source.complete=false ante rechazos previos o duplicados contradictorios.
 
 ## 5. Ejemplo mínimo de identidad para fixtures del equipo analytics
 
@@ -150,8 +156,9 @@ fusiona automáticamente con la anterior, aunque coincidan concentración y form
 **Ingesta se encarga de:** aplicar el mismo perfil en import/fetch, preservar
 evidencia original, persistir advertencias/cobertura, y probar la salida del fetch
 real como pipeline de código con respuestas HTTP grabadas y anonimizadas en tests.
-La prueba de compatibilidad invocará rank sin modificar su implementación. No
-dependerá de llamadas reales a DIGEMID en CI. Ya están listos HTTP, caché, precios,
+Estas tareas ya están implementadas en la rama de ingesta. Las pruebas invocan rank
+sin modificar su implementación y no dependen de llamadas reales a DIGEMID en CI.
+También están listos HTTP, caché, precios,
 identificadores, descarga de varios medicamentos en un distrito y detección de formas.
 
 **Analytics puede avanzar ya en sus archivos:** filtros/ranking sobre estos campos,
@@ -164,3 +171,8 @@ actualizar `docs/cli-contract.md` y el fixture común en un cambio coordinado,
 ejecutar pruebas de ambos equipos y entonces integrar ingesta a main. No migrar
 artefactos históricos en silencio. Esta propuesta no autoriza editar archivos del
 otro equipo ni afirma que analytics ya haya aceptado las decisiones.
+
+Pruebas de esta entrega: `tests/ingest/test_contract.py`, fixture documentado en
+`tests/ingest/fixtures/README.md`. Cubren fetch → rank directo, import + fetch con
+formatos equivalentes, identidad desconocida, separación de sales, conservación
+de datos originales, idempotencia y propagación de diagnósticos a Ranking v1.

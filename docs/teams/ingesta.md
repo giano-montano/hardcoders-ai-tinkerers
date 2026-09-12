@@ -39,6 +39,28 @@ python -m unittest discover -v
 
 Crear handoff propio. Si faltan campos en v1, proponer primero el cambio compartido.
 
+## Actualización: cierre técnico del perfil propuesto
+
+Import y fetch ya comparten el normalizador `text-v1`: sustancia y forma con NFC,
+casefold y espacios colapsados; concentración sin espacios, coma decimal normalizada
+y ceros numéricos redundantes eliminados. No se convierten unidades ni se fusionan
+sales o formas. `identity_status` distingue sustancia reportada de clave de respaldo;
+`source_values` conserva la evidencia original sin sobrescribirla al reimportar.
+
+`source` ahora conserva normalization, warnings, rejected_rows y duplicate_rows;
+fetch conserva además coverage. Un import antiguo sin diagnósticos queda marcado
+diagnostics_unavailable. Se mantiene la fecha original y no se migran artefactos
+existentes automáticamente. Reimportación explícita para adoptar el perfil.
+
+La prueba de compatibilidad ejecuta fetch → rank con respuesta oficial grabada,
+reducida y anonimizada, además de mezclar formatos textuales equivalentes mediante
+import antes de rank. No requiere API real ni altera analytics. Pasaron 24 pruebas
+de ingesta y 29 en la suite completa. El benchmark de tokens inferior corresponde
+a la entrega anterior; no se lanzó otra sesión del modelo ni se repitió la medición.
+
+Contrato implementado en nuestra rama, pendiente de aceptación compartida:
+[`ingesta-contrato-analytics.md`](ingesta-contrato-analytics.md).
+
 ## Evidencia para el pitch — medición histórica, 2026-09-12
 
 Consulta real ya completada: tres medicamentos, un distrito. Se inspeccionó el

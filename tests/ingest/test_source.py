@@ -96,7 +96,8 @@ class SourceTests(unittest.TestCase):
         second["nombreFormaFarmaceutica"] = "Tableta de Desintegración Oral"
         result, dataset = self.run_fetch([{"data": [first, second], "cantidad": 2}])
         self.assertIn("verify_offer_forms", result["warnings"])
-        self.assertEqual([r["form"] for r in dataset["offers"]], [first["nombreFormaFarmaceutica"], second["nombreFormaFarmaceutica"]])
+        self.assertEqual([r["form"] for r in dataset["offers"]], ["tableta sublingual", "tableta de desintegración oral"])
+        self.assertEqual(dataset["offers"][0]["source_values"]["form"], first["nombreFormaFarmaceutica"])
 
     def test_detail_reads_entity_without_overwriting_prices(self):
         with tempfile.TemporaryDirectory() as tmp, patch("medisaving.ingest.commands.Client", FakeClient):
