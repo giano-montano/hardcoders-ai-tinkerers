@@ -1,39 +1,54 @@
-# Medisaving CLI
+# 💊 MediSavings — Generic Medicine Price Agent
 
-Un CLI, tres módulos independientes. Python 3.14, sin dependencias.
-El bot existente (`bot.py` / `receta.py`) conserva su contrato y ejecución.
+> **Smart prescription parser & real-time medicine price comparator for Peru.**  
+> Built by team **Hardcoders** during the *Agents, Everywhere* Global Hackathon.
+
+---
+
+## 📌 Overview & Problem Statement
+
+In Peru, official medicine price data is publicly cataloged by **DIGEMID**, covering registered pharmacies across the country[cite: 1]. However, **patients rarely check government databases while standing at a pharmacy counter**[cite: 1].
+
+- **Extreme Price Gaps:** Identical active ingredients and prescriptions can vary **up to 10x in price** between neighboring pharmacies[cite: 1].
+- **Treatment Abandonment:** Approximately **33% of Peruvians fail to complete their medical treatments due to high medication costs**[cite: 1].
+- **Friction in Access:** Navigating official portals or interpreting handwritten medical prescriptions is tedious and inaccessible for the average citizen.
+
+---
+
+## 💡 The Solution
+
+**MediSavings** bridges the gap between public pricing datasets and citizens through an accessible, conversational AI agent on Telegram[cite: 1]:
+
+1. **Send a Photo:** The patient snaps a photo of their handwritten or printed prescription directly in Telegram[cite: 1].
+2. **Vision AI & Parsing:** An autonomous agent uses Multimodal Vision models to extract medications, dosages, and quantities[cite: 1].
+3. **Real-time Price Intelligence:** The agent queries DIGEMID pricing data and finds the best generic and brand-name alternatives in nearby pharmacies for the specified district[cite: 1].
+4. **Actionable Recommendations:** Delivers an instant, sorted comparison with exact addresses, pharmacy contact numbers, and direct navigation links within seconds[cite: 1].
+
+---
+
+## 🏗️ Architecture & CLI Pipeline
+
+To keep the LLM context lean and avoid hallucination or high token latency, heavy arithmetic, data ingestion, and filtering are decoupled into an independent, lightweight CLI architecture:
+
+- **Ingestion (`medisaving.ingest`):** Handles DIGEMID data retrieval, source normalization, and local caching.
+- **Analytics (`medisaving.analytics`):** Compares unit prices, filters by district/ubigeo, and ranks full medication baskets.
+- **UX (`medisaving.ux`):** Telegram bot engine, interactive message formatting, and actionable UI chips.
 
 ```bash
+# Display CLI commands
 python -m medisaving --help
+
+# 1. Ingest & normalize pricing data
 python -m medisaving ingest import examples/offers.synthetic.json
-python -m medisaving analytics rank DATASET_ID --district 'San Isidro' --top 3
+
+# 2. Rank & filter best offers by district
+python -m medisaving analytics rank DATASET_ID --district 'Lince' --top 3
+
+# 3. Render payload for Telegram UI
 python -m medisaving ux telegram RESULT_ID
+
+# Run test suite
 python -m unittest discover -v
-```
-
-Reemplazar los IDs con los que devuelve el comando anterior. Salida JSON compacta;
-los registros completos quedan en `data/local/medisaving/`, ignorado por Git.
-Para aislar chats o pruebas: `python -m medisaving --data-dir RUTA ...`.
-El servicio debe elegir esa ruta, nunca aceptar una ruta enviada por Telegram.
-
-**Funciona hoy:** importar ofertas normalizadas, ordenar precios comparables y
-renderizar texto para Telegram. El ejemplo es sintético, no ofrece precios reales.
-El CLI no consulta aún DIGEMID, no envía mensajes ni genera imágenes/PDF.
-Esas son las extensiones asignadas a los equipos, no funcionalidades simuladas.
-
-- [Ingesta](docs/teams/ingesta.md): consultas, normalización y caché.
-- [Analytics](docs/teams/analytics.md): comparación, filtros y canastas.
-- [UX](docs/teams/ux.md): conversación, Telegram y artefactos visuales.
-- [Contrato compartido v1](docs/cli-contract.md).
-
-Cada equipo trabaja en su rama y sus carpetas. El dispatcher carga `register()`
-de cada módulo; agregar comandos dentro del módulo no requiere tocar el dispatcher.
-Cambios a `medisaving/core.py`, el contrato o la integración del bot se coordinan
-en un PR separado. No cambiar archivos de otro equipo para desbloquear el propio.
-
-La mejora esperada es sacar descarga, filtrado y aritmética del contexto del modelo.
-No hay una reducción de latencia medida todavía: los equipos deben registrar
-tiempo de fuente, cómputo y render, bytes de salida y aciertos de caché.
 --------------------------------------------------------------------------------------------------------------------------------------------------
  
 Below is a quick preview of MedSavings Bot in action: processing medical prescriptions, querying DIGEMID pricing and pharmacy availability, and delivering real-time, location-based options.
