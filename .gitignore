@@ -67,3 +67,6 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---- Fotos de recetas subidas por usuarios (dato sensible de salud) -----
+data/recetas/
