@@ -2,7 +2,8 @@ from types import SimpleNamespace
 import unittest
 
 from medisaving.ux import (STATUS_MESSAGES, TELEGRAM_SAFE_UTF16, google_maps_url,
-                           prescription_notice, render_status, split_telegram, telegram)
+                           offer_detail_text, offer_summary_text, prescription_notice,
+                           render_status, split_telegram, telegram)
 from tests.helpers import fixture
 
 
@@ -33,10 +34,10 @@ class TelegramTests(unittest.TestCase):
         store = MemoryStore(self.ranking(fixture()))
         result = telegram(SimpleNamespace(result_id="a" * 32, expand=False), store)
         text = "\n".join(result["messages"])
-        self.assertIn("Box price: S/ 54.00 · 30 units", text)
-        self.assertIn("Box price: S/ 60.00", text)
-        self.assertIn("Coverage is partial", text)
-        self.assertIn("1 more comparable option is available", text)
+        self.assertIn("💰 S/ 54.00 per box · S/ 1.80 each", text)
+        self.assertIn("💰 S/ 60.00 per box", text)
+        self.assertIn("may not include every pharmacy", text)
+        self.assertIn("✨ I found 1 more option", text)
         self.assertIsNone(result["parse_mode"])
         self.assertGreater(result["metrics"]["output_utf8_bytes"], 1)
 
@@ -44,10 +45,10 @@ class TelegramTests(unittest.TestCase):
         store = MemoryStore(self.ranking(fixture()))
         result = telegram(SimpleNamespace(result_id="a" * 32, expand=False), store)
         buttons = result["keyboards"][0]["inline_keyboard"]
-        self.assertEqual(buttons[0][0]["text"], "Open map")
+        self.assertEqual(buttons[0][0]["text"], "🗺️ Open map")
         self.assertIn("google.com/maps/search/?api=1", buttons[0][0]["url"])
         self.assertEqual(buttons[-1][0]["callback_data"], "ux:details:o0")
-        self.assertIn("Option 1 — details", result["interaction_responses"]["ux:details:o0"]["messages"][0])
+        self.assertIn("ℹ️ OPTION 1 — DETAILS", result["interaction_responses"]["ux:details:o0"]["messages"][0])
         self.assertIn("ux:expand", result["interaction_responses"])
 
     def test_quantity_alert_is_only_based_on_verified_structured_data(self):
@@ -71,6 +72,17 @@ class TelegramTests(unittest.TestCase):
         row["address"] = None
         self.assertIsNone(google_maps_url(row))
 
+    def test_cards_use_visual_hierarchy_without_missing_data_noise(self):
+        row = self.ranking(fixture())["groups"][0]["offers"][0]
+        summary = offer_summary_text(row, 1)
+        details = offer_detail_text(row, 1)
+        self.assertTrue(summary.startswith("💊 OPTION 1"))
+        self.assertIn("🏪", summary)
+        self.assertIn("📍", summary)
+        self.assertIn("💰", summary)
+        self.assertIn("📦", details)
+        self.assertNotIn("not reported", summary)
+
     def test_expand_includes_remaining_ranked_options(self):
         store = MemoryStore(self.ranking(fixture()))
         compact = telegram(SimpleNamespace(result_id="a" * 32, expand=False), store)
@@ -92,3 +104,4 @@ class TelegramTests(unittest.TestCase):
             rendered = render_status(SimpleNamespace(state=state), MemoryStore({}))
             self.assertEqual(rendered["messages"], [expected])
             self.assertIsNone(rendered["parse_mode"])
+            self.assertTrue(expected[0] in "📷📍🔎😕⚠️✨")
