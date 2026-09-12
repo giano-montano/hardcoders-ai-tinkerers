@@ -1,0 +1,1 @@
+"""Shared medicine search CLI."""
