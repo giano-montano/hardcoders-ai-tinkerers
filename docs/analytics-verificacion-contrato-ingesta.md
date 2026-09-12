@@ -7,6 +7,28 @@ misma rama (`medisaving/ingest/normalize.py`, `commands.py`, commit `3edf3b5`)
 y contra `medisaving/core.py` en `main`, no solo contra lo que el documento
 afirma que hace.
 
+## Estado: discrepancia resuelta en `c0b29b5`
+
+El commit `c0b29b5` ("Unify ingestion normalization and persist dataset
+diagnostics", `origin/team/ingesta`) corrige los tres puntos señalados abajo.
+Verificado corriendo el código real (no solo leyendo el diff), en un worktree
+temporal sobre ese commit:
+
+- `strength("020,00 MG")` → `"20mg"` y `strength("0,250 mg")` → `"0.25mg"`,
+  igual que promete la propuesta (antes producía `"020.00mg"`/`"0.250mg"`).
+- `medicine_key`/`form` ahora pasan por `normalize.text()`
+  (NFC + casefold + colapso de espacios):
+  `" ESCITALOPRAM  OXALATO "` → `"escitalopram oxalato"`.
+- `canonical_import()`/`canonical_offer()` aplican el mismo perfil tanto a
+  `ingest import` como a `ingest fetch`, con `identity_status`/`source_values`
+  ya implementados (antes figuraban como "compromiso pendiente").
+- Suite completa en ese commit: 29/29 tests OK, incluyendo un test nuevo
+  (`test_fetch_directly_consumed_by_rank`) que ejercita `ingest fetch` →
+  `analytics rank` de punta a punta.
+
+El resto de este documento queda como registro de la discrepancia original y
+cómo se verificó su corrección.
+
 ## Compatible con el código actual sin cambios
 
 - `core.validate_dataset` no rechaza campos desconocidos, así que
@@ -63,22 +85,16 @@ este contrato dice resolver pero el código todavía no resuelve.
 - Los campos ya implementados en fetch (`source_product_id`, `source_group`,
   `source_form_group`, `ubigeo`) — analytics los ignora, no los necesita.
 
-## Qué falta antes de aceptar el contrato como acordado
+## Qué faltaba antes de aceptar el contrato como acordado (resuelto en `c0b29b5`)
 
-1. **Arreglar `normalize.strength()`** para que canonice el número (parsear
-   como `Decimal`, quitar ceros a la izquierda y ceros decimales redundantes)
-   antes de fusionar `team/ingesta` a `main`, y agregar un test con entrada
-   tipo `"020,00 MG"` — hoy la propuesta describe un comportamiento que el
-   código no tiene.
-2. `source_values` y `identity_status` figuran como "compromiso pendiente" en
-   la propia propuesta (sección 3): no están implementados todavía en
-   `commands.py`/`normalize.py` de la rama. Analytics puede diseñar `basket`
-   asumiendo que existirán, pero no puede probarlos contra datos reales hasta
-   que ingesta los implemente.
-3. Confirmar si `medicine_key` realmente pasa por NFC+casefold+trim como dice
-   la tabla de la sección 2 — `normalize.py` actual no toca `medicine_key`
-   (`normalize.offer()` solo hace `.strip()` sobre todos los campos string,
-   sin casefold ni NFC). Mismo tipo de discrepancia que con `strength`.
+1. ~~**Arreglar `normalize.strength()`**~~ Resuelto: ahora canoniza el número
+   vía `Decimal`, con test `test_strength_canonical_decimal_without_unit_conversion`
+   cubriendo `"020,00 MG"` y casos equivalentes.
+2. ~~`source_values` y `identity_status` "compromiso pendiente"~~ Resuelto:
+   `canonical_offer()` los implementa y `test_contract.py` los prueba.
+3. ~~Confirmar NFC+casefold+trim en `medicine_key`~~ Resuelto:
+   `normalize.text()` se aplica a `medicine_key` y `form` vía `canonical_offer`/
+   `canonical_import`.
 
 ## Cómo esto ajusta el plan de analytics ya aprobado
 
@@ -99,7 +115,7 @@ en el plan aprobado. Sí agrega una responsabilidad puntual:
 
 ## Recomendación
 
-Aceptar la propuesta como base de trabajo en paralelo (no bloquea el plan de
-analytics), pero responder a ingesta señalando el punto 1 (normalización de
-`strength` no implementada como se documenta) como corrección necesaria antes
-de fusionar `team/ingesta` a `main` o de dar por cerrado el contrato.
+Con `c0b29b5` ya no hay bloqueos técnicos conocidos para tratar la propuesta
+de `docs/teams/ingesta-contrato-analytics.md` como acordada. `analytics rank`/
+`basket` (`medisaving/analytics/`) siguen sin normalizador propio, apoyados en
+que ingesta aplica el perfil de texto de forma simétrica en `import`/`fetch`.
