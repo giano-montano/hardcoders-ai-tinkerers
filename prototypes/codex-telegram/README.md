@@ -4,6 +4,10 @@ Runtime activo en laptop: `/home/f3mt0/medicinas-telegram`, servicio de usuario
 `medisaving.service`. Este prototipo existía antes del CLI; se versiona ahora junto
 con su integración. El bot Python de la raíz pertenece a otro flujo y no se modifica.
 
+Bot activo desde 2026-09-12 15:14 Lima: **@MedSavings_bot**. Cola y datos privados
+en `data-medsavings/` mediante DATA_DIR. Los datos del bot anterior siguen en data/;
+no se reusan sus offsets ni se reenvían sus trabajos al bot nuevo.
+
 `src/bot.js` conserva polling, cola por chat y entrega. `src/codex.js` monta el CLI
 como solo lectura en `/opt/medisaving`, y el workspace privado en `/work`.
 El comando `med` usa `/work/ingest` para los datos. Las instrucciones de ingesta se

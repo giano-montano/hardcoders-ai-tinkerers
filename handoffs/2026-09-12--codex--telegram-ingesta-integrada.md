@@ -36,3 +36,12 @@ No se detuvieron procesos ajenos, ni se rotó el token, ni se cambió webhook.
 
 La recepción fiable queda pendiente de localizar/detener el consumidor concurrente
 o acordar un bot separado. No iniciar otro getUpdates para diagnosticarlo.
+
+## Actualización: bot exclusivo configurado
+
+El usuario creó @MedSavings_bot y autorizó cambiar nuestro servicio. Se verificó
+su identidad con getMe y la ausencia de webhook; token instalado únicamente en
+.env remoto, con permisos 0600. Servicio reiniciado a las 15:14:18 Lima.
+DATA_DIR apunta a data-medsavings: cola nueva sin offsets del bot anterior.
+Se preservaron configuración y datos anteriores. No hubo envíos de prueba ni
+cambios al token o receptor del bot antiguo. Se mantiene la integración CLI activa.
