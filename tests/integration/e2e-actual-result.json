@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-12",
+  "model": "gpt-5.6-sol",
+  "reasoning": "medium",
+  "before": {
+    "input_tokens": 2940806,
+    "cached_input_tokens": 2864512,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 5804,
+    "reasoning_output_tokens": 1497,
+    "total_tokens": 2946610,
+    "uncached_input_tokens": 76294,
+    "turn_seconds": 343.627
+  },
+  "after": {
+    "input_tokens": 130345,
+    "cached_input_tokens": 119680,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1630,
+    "reasoning_output_tokens": 291,
+    "uncached_input_tokens": 10665,
+    "total_tokens": 131975,
+    "turn_seconds": 51.92,
+    "wrapper_seconds": 54.809
+  },
+  "reductions_percent": {
+    "input_tokens": 95.57,
+    "uncached_input_tokens": 86.02,
+    "output_tokens": 71.92,
+    "total_tokens": 95.52,
+    "turn_seconds": 84.89
+  },
+  "after_commands": 15,
+  "after_command_failures": 0,
+  "after_tool_output_utf8_bytes": 10508,
+  "before_rollout_sha256": "ccb7a4713e58193ee4a73d0ec6c4f063597c2e8598242fb455b984d600406396",
+  "after_events_sha256": "7ca8987ef0953369830747be6f1f8985a1e02a0505bc3614c98be08a72ed67d0",
+  "data": "190 real DIGEMID offers, three medicines, Lince; no invented quantities",
+  "telegram_sends": 0,
+  "limitations": [
+    "One actual run per configuration; not a controlled benchmark or SLA.",
+    "Before: photo and resumed conversation; after: equivalent medicine list as text in a fresh isolated session.",
+    "Tokens measure the complete agent, including input, skills, tool loops and final answer; do not attribute all savings to analytics.",
+    "Turn seconds use task_started to task_complete in both rollouts; wrapper seconds available only for after.",
+    "No Telegram receive/send round-trip measured.",
+    "Source salts/forms remain distinct; rank does not guarantee the cheapest clinically equivalent option across all source labels."
+  ]
+}

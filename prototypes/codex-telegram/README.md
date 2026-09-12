@@ -36,16 +36,19 @@ Requiere Linux/bwrap y los mismos recursos de navegador del runtime. La prueba
 llama exclusivamente al CLI en el sandbox real: fuente pública, caché, montajes y
 lectura de ofertas/detalles. No ejecuta Codex ni conecta Telegram.
 
-Release activado el 2026-09-12: `releases/ingest-integration-20260912`.
-Respaldo previo: `releases/pre-ingest-integration-20260912` con codex.js, agent.md
+Release actual: `releases/full-flow-20260912` (ingesta + analytics + UX).
+Respaldo previo: `releases/pre-full-flow-20260912` con codex.js, agent.md
 y destino anterior del enlace CLI en rollback.json. Para revertir, drenar la cola,
 detener servicio, restaurar esos archivos/enlace y volver a iniciarlo.
 
 ## Alcance actual
 
-`med u/r/f/v/d` integra solo ingesta. `v` lee 1–5 ofertas de un producto en orden
-de fuente, con forma exacta opcional; no ordena precios ni calcula canastas.
-El agente debe presentar opciones verificadas, no afirmar que son las más baratas.
-La integración de analytics y su medición E2E quedan pendientes.
-No se ejecutó una sesión nueva del modelo para probar esta activación. La próxima
-consulta real permitirá verificar el uso efectivo del CLI por el agente.
+`med u/r/f/v/d` cubre ingesta; `med rank` y `med basket` llaman analytics.
+`med enrich` incorpora detalles de las ofertas ya elegidas y `med show` llama UX.
+`med status` presenta estados de conversación. Show admite ranking, no basket.
+El agente presenta opciones reportadas; no afirma mínimos globales al separar sales.
+
+Se verificaron componentes con 190 ofertas reales y después una ejecución interna
+de runAgent con la misma configuración: usó ingesta, rank, enrich y show y generó
+una respuesta en 54,809 s. No se enviaron mensajes de prueba a Telegram. Ver
+`docs/teams/flujo-integrado-verificacion.md` para cifras y límites del ensayo.

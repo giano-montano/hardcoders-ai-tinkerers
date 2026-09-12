@@ -1,4 +1,10 @@
 #!/bin/sh
 # Fixed read-only package path and per-chat storage inside the existing sandbox.
 export PYTHONPATH=/opt/medisaving
+case "${1:-}" in
+  rank|basket) command="$1"; shift; exec /usr/bin/python3 -m medisaving --data-dir /work/ingest analytics "$command" "$@" ;;
+  show) shift; exec /usr/bin/python3 -m medisaving --data-dir /work/ingest ux telegram "$@" ;;
+  status) shift; exec /usr/bin/python3 -m medisaving --data-dir /work/ingest ux status "$@" ;;
+  enrich) shift; exec /usr/bin/python3 -m medisaving.ingest.runtime.enrich "$@" ;;
+esac
 exec /usr/bin/python3 -m medisaving --data-dir /work/ingest ingest "$@"

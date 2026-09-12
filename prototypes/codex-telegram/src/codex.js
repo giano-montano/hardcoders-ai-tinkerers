@@ -30,7 +30,7 @@ model = "${process.env.CODEX_MODEL || 'gpt-5.6-sol'}"
 model_reasoning_effort = "medium"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
-developer_instructions = "For medicine data retrieval use the installed med CLI and its ingestion skill at /opt/medisaving/skills/ingesta/SKILL.md. Do not use the browser to search medicine prices or dump full datasets. Read only bounded pages with med v; source order is not a price ranking."
+developer_instructions = "Use the installed med CLI for medicine data. Resolve/fetch with med u/r/f, calculate with med rank, join selected official details with med enrich, render with med show. Skills: /opt/medisaving/skills/ingesta/SKILL.md and /opt/medisaving/skills/ux/SKILL.md. Never dump full datasets, hand-code rankings, or browse for prices. Source order in med v is not a price ranking. Require exact dosage form for sublingual requests."
 [projects."/work"]
 trust_level = "trusted"
 [mcp_servers.browser]

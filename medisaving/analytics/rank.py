@@ -6,6 +6,8 @@ def register(commands):
     command.add_argument("dataset_id")
     command.add_argument("--district")
     command.add_argument("--medicine", help="Filter to one medicine_key (exact, case-insensitive)")
+    command.add_argument("--form", help="Require an exact canonical dosage form")
+    command.add_argument("--strength", help="Require an exact canonical strength")
     command.add_argument("--top", type=int, default=3)
     command.add_argument("--basis", choices=("unit", "pack"), default="unit")
     command.set_defaults(run=rank)
@@ -24,6 +26,10 @@ def rank(args, store):
             reasons["out_of_district"] += 1
             continue
         if medicine and row["medicine_key"].casefold() != medicine.casefold():
+            continue
+        if getattr(args, "form", None) and row["form"].casefold() != args.form.casefold():
+            continue
+        if getattr(args, "strength", None) and row["strength"].casefold() != args.strength.casefold():
             continue
         # Never mix strength, dosage form, or boxes of different sizes.
         if row.get(field) is None:
@@ -51,7 +57,8 @@ def rank(args, store):
     result = {"kind": "ranking", "schema_version": 1, "dataset_id": args.dataset_id,
               "basis": args.basis, "source": dataset["source"], "groups": selections,
               "excluded_unpriced_or_unknown_pack": skipped, "exclusion_reasons": reasons,
-              "filters": {"district": args.district, "medicine": medicine, "top": args.top}}
+              "filters": {"district": args.district, "medicine": medicine, "top": args.top,
+                          "form": getattr(args, "form", None), "strength": getattr(args, "strength", None)}}
     return {"result_id": store.put(result), "groups": len(selections),
             "selected": sum(len(g["offers"]) for g in selections),
             "excluded_unpriced_or_unknown_pack": skipped, "exclusion_reasons": reasons,

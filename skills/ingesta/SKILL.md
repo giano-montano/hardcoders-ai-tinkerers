@@ -26,8 +26,8 @@ n y complete, sin filas. Pasar el ID al módulo consumidor; no abrir el JSON com
 ni enumerar ofertas en el contexto. `v` lee 1–5 filas en orden de fuente, por ID de
 producto y forma exacta opcional; `next` permite continuar con --offset. No ordena
 por precio ni identifica mínimos: presentar opciones, no afirmar que son las más
-baratas. Mientras analytics no esté integrado, usar esta lectura acotada para dar
-opciones sin recorrer todo el dataset. `d` obtiene el detalle de una oferta identificada
+baratas. Usar esta lectura acotada para inspección puntual; el flujo integrado usa
+rank para elegir opciones sin recorrer el dataset en el contexto. `d` obtiene el detalle de una oferta identificada
 por el consumidor. Conserva precios de unidad y caja independientes, sin dividirlos.
 
 Caché automática: precios/detalles 15 min, candidatos/distritos 24 h. `--fresh`
@@ -53,3 +53,10 @@ no migra artefactos guardados automáticamente.
 En el bot desplegado, `med` equivale a `python -m medisaving --data-dir
 /work/ingest ingest`: usar `med u`, `med r`, `med f`, `med v`, `med d`. El código está
 montado de solo lectura en /opt/medisaving; los datos están aislados por chat.
+
+El wrapper también expone `med rank`/`med basket` para analytics, `med enrich`
+para agregar detalle a un ranking y `med show`/`med status` para UX. Para la respuesta
+final: rank → enrich → show. En rank, usar --strength canónica y --form exacta
+para solicitudes como sublingual. No unir sales ni afirmar mínimos globales entre
+identidades que el contrato mantiene separadas. Basket requiere cantidades explícitas;
+show consume ranking, no basket.
