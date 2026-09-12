@@ -70,3 +70,9 @@ desktop.ini
 
 # ---- Fotos de recetas subidas por usuarios (dato sensible de salud) -----
 data/recetas/
+
+# Volcados de DIGEMID: pesados (GB). grupos.json SI se commitea (300K, es el indice).
+data/digemid/precios*.csv
+data/digemid/precios*.xlsx
+data/digemid/catalogo_productos.xlsx
+data/digemid/_hechos.txt

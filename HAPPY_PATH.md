@@ -277,9 +277,12 @@ python -c "from receta import analizar_receta; print(analizar_receta('data/recet
   se menciona en el pitch que el flujo es idéntico.
 - ❌ Login, cuentas, historial, base de datos propia.
 - ❌ Mapa, GPS, distancias reales. **El distrito basta.**
-- ❌ Scrapear DIGEMID entero a una BD local. La API responde en vivo y rápido;
-  un dump masivo es tiempo perdido y riesgo de bloqueo. *(Si se cae en la demo:
-  cachear en JSON las 2-3 consultas del guion como plan B.)*
+- ❌ Scrapear **todo** DIGEMID a una BD local. La API responde en vivo y rápido,
+  y el dump nacional son ~**31 millones de filas / ~1.5 h / varios GB** (medido,
+  ver §9). No lo necesitamos para la demo.
+  **Pero sí vale un dump acotado como plan B:** `digemid_dump.py precios
+  --departamento 15` deja Lima entero en CSV y sirve de caché si el wifi del
+  evento falla.
 - ❌ Interpretar dosis, diagnosticar o sugerir tratamientos. **No damos consejo
   médico**: leemos la receta que un médico ya firmó y comparamos precios.
 
@@ -293,3 +296,71 @@ python -c "from receta import analizar_receta; print(analizar_receta('data/recet
   `data/recetas/`, que **está en `.gitignore`**. No commitear recetas reales.
 - El bot **no reemplaza al químico farmacéutico** ni al médico. Muestra precios
   oficiales y deja la decisión en el usuario.
+
+---
+
+## 9. Bajar la base a CSV / XLSX — `digemid_dump.py`
+
+El MINSA **no publica** un dump crudo descargable: sus "Reportes" son
+indicadores agregados (media/mediana/moda) en Word/Excel, no la tabla fila por
+fila. Para tener la data cruda hay que recorrer la API (§4).
+
+`digemid_dump.py` hace eso. Stdlib pura, sin `pip install`.
+
+```bash
+python digemid_dump.py grupos                      # 1) enumera productos (~26 llamadas)
+python digemid_dump.py precios --departamento 15   # 2) precios de Lima -> CSV
+python digemid_dump.py xlsx                        # 3) CSV -> XLSX
+```
+
+Otros comandos:
+
+```bash
+python digemid_dump.py catalogo                  # XLSX oficial de productos (1 llamada, 18,249 filas)
+python digemid_dump.py precios --ubigeo 150116   # solo Lince (rapido, para probar)
+python digemid_dump.py precios                   # TODO el Peru
+```
+
+### Como funciona (y por que asi)
+
+**El producto es obligatorio.** `preciovista/ciudadano` con `codigoProducto`
+en `null` devuelve **0 filas**, aunque mandes distrito. No se puede pedir "todo
+lo de Lince" de un tiro: hay que iterar producto por producto.
+
+**Enumerar los productos.** `producto/autocompleteciudadano` **ignora
+`tamanio`** y devuelve todo lo que matchea por substring. Barriendo las 26
+letras A-Z y deduplicando por la terna `(grupo, codGrupoFF, concent)` salen
+**3,330 grupos** — el catalogo completo en 26 llamadas. Queda en
+`data/digemid/grupos.json` (300K, **si esta commiteado**).
+
+**El dump es reanudable.** Cada grupo terminado se anota en
+`data/digemid/_hechos.txt`. Si lo cortas (Ctrl+C, se cae el wifi), volver a
+correr el mismo comando sigue donde quedo, sin duplicar filas. Hay pausa de
+0.4 s entre llamadas: es un servidor del Estado, no lo martillemos.
+
+### Tamano real (medido sobre una muestra de 12 grupos)
+
+| Alcance | Filas aprox. | Tiempo | Sirve para |
+|---|---|---|---|
+| Un distrito (`--ubigeo 150116`) | ~40 mil | ~25 min | probar, caché de demo |
+| Lima (`--departamento 15`) | ~10 millones | ~40 min | plan B realista |
+| Todo el Perú (sin filtro) | **~31 millones** | ~1.5 h | investigación, no demo |
+
+### ⚠️ El XLSX no aguanta la base completa
+
+Una hoja de Excel topa en **1,048,576 filas**. 31M filas **no entran**: el
+comando `xlsx` parte automaticamente en `precios_parte1.xlsx`,
+`precios_parte2.xlsx`… (30+ archivos para el dump nacional).
+
+**El CSV es el formato bueno aca.** El XLSX solo tiene sentido para un
+subconjunto filtrado — un distrito, o un producto a nivel nacional.
+
+> Atajo si solo quieres **un producto en todo el Peru** en Excel: el propio
+> DIGEMID lo genera. `preciovista/precioexcelciudadano` con el mismo filtro de
+> §4.3 devuelve un XLSX ya armado y ordenado por precio (omeprazol 20 mg =
+> 35,178 filas, 2 MB, una sola llamada).
+
+### Los volcados no se commitean
+
+`.gitignore` ya bloquea `data/digemid/precios*.csv|xlsx` y el catalogo. Solo
+`grupos.json` va al repo, porque es chico y es el indice de todo lo demas.
